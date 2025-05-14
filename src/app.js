@@ -1,9 +1,62 @@
 import { string, setLocale } from 'yup';
 import i18next from 'i18next';
+import { uniqueId } from 'lodash';
+import axios from 'axios';
 import render from './view.js';
+import parse from './parser.js';
 import ru from './locales/ru.js';
 
 const schema = string().url().required();
+
+const updateState = (state, stateKey, data) => ({
+  ...state,
+  [stateKey]: {
+    ...state[stateKey],
+    ...data,
+  },
+});
+
+const createProxyUrl = (originURL) => {
+  const proxyURL = new URL('/get', 'https://allorigins.hexlet.app');
+  proxyURL.searchParams.set('url', originURL);
+  proxyURL.searchParams.set('disableCache', 'true');
+
+  return proxyURL.toString();
+};
+
+const fetchRssFeed = (watchedState, url) => {
+  updateState(watchedState, 'loadingProcess', {
+    status: 'processing', // После клика, статус состояние в процессе
+    error: null,
+  });
+
+  return axios
+    .get(createProxyUrl(url), { timeout: 10000 }) // Timeout Время до истечения запроса в мс
+    .then((response) => {
+      const { title, description, items } = parse(response.data.contents); // Распарсенные данные
+      const feed = { // Структура фида
+        id: uniqueId(), // Присваеваем уникальный ID
+        url,
+        title,
+        description,
+      };
+      // Постам присвается ID фида и свой ID (Нормализация данных)
+      const posts = items.map((item) => ({ ...item, id: uniqueId(), channelId: feed.id }));
+
+      updateState(watchedState, 'loadingProcess', {
+        status: 'success', // Статус завершено
+        error: null,
+      });
+      watchedState.feeds.unshift(feed);
+      watchedState.posts.unshift(...posts); // Без spread вставится массив
+    })
+    .catch((error) => {
+      updateState(watchedState, 'loadingProcess', {
+        status: 'failed',
+        error,
+      });
+    });
+};
 
 export default () => {
   const initialState = { // Начальное состояние
@@ -11,13 +64,20 @@ export default () => {
       valid: false,
       error: null,
     },
+    loadingProcess: {
+      status: 'filling',
+      error: null,
+    },
     feeds: [],
+    posts: [],
   };
 
   const elements = { // Элементы
     form: document.querySelector('.rss-form'),
     input: document.querySelector('#url-input'),
     feedback: document.querySelector('.feedback'),
+    feedsContainer: document.querySelector('.feeds'),
+    postsContainer: document.querySelector('.posts'),
   };
 
   const defaultLanguage = 'ru';
@@ -44,26 +104,20 @@ export default () => {
         e.preventDefault();
         const data = new FormData(e.target);
         const url = data.get('url');
-
-        const updateState = (form) => {
-          watchedState.form = {
-            ...watchedState.form,
-            ...form,
-          };
-        };
+        const feedsUrls = watchedState.feeds.map((feed) => feed.url);
 
         schema
-          .notOneOf(watchedState.feeds)
+          .notOneOf(feedsUrls)
           .validate(url)
           .then(() => {
-            updateState({
+            updateState(watchedState, 'form', {
               valid: true,
               error: null,
             });
-            watchedState.feeds.unshift(url);
+            fetchRssFeed(watchedState, url);
           })
           .catch((error) => {
-            updateState({
+            updateState(watchedState, 'form', {
               valid: false,
               error: error.message?.key || 'notUrl',
             });
