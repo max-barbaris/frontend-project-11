@@ -1,6 +1,6 @@
 import { string, setLocale } from 'yup';
 import i18next from 'i18next';
-import { uniqueId } from 'lodash';
+import { uniqueId, differenceBy } from 'lodash';
 import axios from 'axios';
 import render from './view.js';
 import parse from './parser.js';
@@ -75,6 +75,28 @@ const fetchRssFeed = (watchedState, url) => {
     });
 };
 
+const pollForNewPosts = (watchedState) => {
+  const promises = watchedState.feeds.map((feed) => axios
+    .get(createProxyUrl(feed.url), { timeout: 10000 })
+    .then((response) => {
+      const { items: loadedPosts } = parse(response.data.contents);
+      const previousPosts = watchedState.posts.filter((post) => post.channelId === feed.id);
+
+      const newPosts = differenceBy(loadedPosts, previousPosts, 'title')
+        .map((post) => ({ ...post, channelId: feed.id, id: uniqueId() }));
+      watchedState.posts.unshift(...newPosts);
+    })
+    .catch((error) => {
+      updateState(watchedState, 'loadingProcess', {
+        status: 'failed',
+        error: getLoadingProcessErrorType(error),
+      });
+    }));
+  Promise.all(promises).finally(() => {
+    setTimeout(() => pollForNewPosts(watchedState), 5000);
+  });
+};
+
 export default () => {
   const initialState = { // Начальное состояние
     form: {
@@ -133,5 +155,6 @@ export default () => {
             }
           });
       });
+      setTimeout(() => pollForNewPosts(watchedState), 5000);
     });
 };
