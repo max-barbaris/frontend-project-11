@@ -6,15 +6,23 @@ import render from './view.js';
 import parse from './parser.js';
 import ru from './locales/ru.js';
 
-const schema = string().url().required();
-
-const updateState = (state, stateKey, data) => ({
-  ...state,
-  [stateKey]: {
-    ...state[stateKey],
+const updateState = (state, field, data) => {
+  state[field] = {
+    ...state[field],
     ...data,
-  },
-});
+  };
+};
+
+const validateUrl = (url, feeds) => {
+  const feedUrls = feeds.map((feed) => feed.url);
+  const schema = string().url().required();
+
+  return schema
+    .notOneOf(feedUrls)
+    .validate(url)
+    .then(() => null)
+    .catch((error) => error.message);
+};
 
 const createProxyUrl = (originURL) => {
   const proxyURL = new URL('/get', 'https://allorigins.hexlet.app');
@@ -104,23 +112,15 @@ export default () => {
         e.preventDefault();
         const data = new FormData(e.target);
         const url = data.get('url');
-        const feedsUrls = watchedState.feeds.map((feed) => feed.url);
 
-        schema
-          .notOneOf(feedsUrls)
-          .validate(url)
-          .then(() => {
-            updateState(watchedState, 'form', {
-              valid: true,
-              error: null,
-            });
-            fetchRssFeed(watchedState, url);
-          })
-          .catch((error) => {
-            updateState(watchedState, 'form', {
-              valid: false,
-              error: error.message?.key || 'notUrl',
-            });
+        validateUrl(url, watchedState.feeds)
+          .then((error) => {
+            if (!error) {
+              updateState(watchedState, 'form', { valid: true, error: null });
+              fetchRssFeed(watchedState, url);
+            } else {
+              updateState(watchedState, 'form', { valid: false, error: error.key });
+            }
           });
       });
     });
