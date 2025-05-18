@@ -5,11 +5,15 @@ const render = (elements, state, i18nextInstance) => {
     const { valid, error } = form;
     const { input, feedback } = elements;
 
+    feedback.classList.remove('text-success');
+    feedback.classList.remove('text-danger');
+
     if (valid) {
       input.classList.remove('is-invalid');
       feedback.textContent = '';
     } else {
       input.classList.add('is-invalid');
+      feedback.classList.add('text-danger');
       feedback.textContent = i18nextInstance.t(`errors.${error}`);
     }
   };
@@ -96,6 +100,37 @@ const render = (elements, state, i18nextInstance) => {
     postsContainer.appendChild(postsFragment);
   };
 
+  const renderLoadingProcess = ({ loadingProcess }) => {
+    const { submit, input, feedback } = elements;
+    feedback.classList.remove('text-success');
+    feedback.classList.remove('text-danger');
+
+    switch (loadingProcess.status) {
+      case 'failed':
+        submit.disabled = false;
+        input.removeAttribute('readonly');
+        feedback.classList.add('text-danger');
+        feedback.textContent = i18nextInstance.t([`errors.${loadingProcess.error}`, 'errors.unknown']);
+        break;
+      case 'success':
+        submit.disabled = false;
+        input.removeAttribute('readonly');
+        input.value = '';
+        feedback.classList.add('text-success');
+        feedback.textContent = i18nextInstance.t('loading.success');
+        input.focus();
+        break;
+      case 'processing':
+        submit.disabled = true;
+        input.setAttribute('readonly', true);
+        feedback.classList.add('text-success');
+        feedback.innerHTML = i18nextInstance.t('loading.processing');
+        break;
+      default:
+        throw new Error(`Unknown loadingProcess status: '${loadingProcess.status}'`);
+    }
+  };
+
   const watchedState = onChange(state, (path) => {
     switch (path) {
       case 'form':
@@ -106,6 +141,9 @@ const render = (elements, state, i18nextInstance) => {
         break;
       case 'posts':
         renderPosts(state);
+        break;
+      case 'loadingProcess':
+        renderLoadingProcess(state);
         break;
       default:
         break;

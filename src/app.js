@@ -32,6 +32,15 @@ const createProxyUrl = (originURL) => {
   return proxyURL.toString();
 };
 
+const getLoadingProcessErrorType = (error) => {
+  switch (true) {
+    case error.isParsingError: return 'noRss';
+    case error.isAxiosError && error.message.includes('timeout'): return 'timeout';
+    case error.isAxiosError: return 'network';
+    default: return 'unknown';
+  }
+};
+
 const fetchRssFeed = (watchedState, url) => {
   updateState(watchedState, 'loadingProcess', {
     status: 'processing', // После клика, статус состояние в процессе
@@ -61,7 +70,7 @@ const fetchRssFeed = (watchedState, url) => {
     .catch((error) => {
       updateState(watchedState, 'loadingProcess', {
         status: 'failed',
-        error,
+        error: getLoadingProcessErrorType(error),
       });
     });
 };
@@ -73,7 +82,7 @@ export default () => {
       error: null,
     },
     loadingProcess: {
-      status: 'filling',
+      status: 'success',
       error: null,
     },
     feeds: [],
@@ -86,6 +95,7 @@ export default () => {
     feedback: document.querySelector('.feedback'),
     feedsContainer: document.querySelector('.feeds'),
     postsContainer: document.querySelector('.posts'),
+    submit: document.querySelector('.rss-form button[type="submit"]'),
   };
 
   const defaultLanguage = 'ru';
