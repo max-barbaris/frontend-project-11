@@ -108,6 +108,8 @@ export default () => {
     },
     feeds: [],
     posts: [],
+    viewedPosts: new Set(),
+    modal: { postId: '' },
   };
 
   // Элементы
@@ -118,6 +120,7 @@ export default () => {
     feedsContainer: document.querySelector('.feeds'),
     postsContainer: document.querySelector('.posts'),
     submit: document.querySelector('.rss-form button[type="submit"]'),
+    modalWindow: document.querySelector('.modal'),
   };
 
   const defaultLanguage = 'ru';
@@ -156,6 +159,17 @@ export default () => {
             }
           });
       });
+
+      elements.postsContainer.addEventListener('click', (event) => {
+        const clickedElement = event.target.closest('[data-id]');
+        if (!clickedElement) return;
+
+        const postId = clickedElement.dataset.id;
+        if (!postId) return;
+
+        watchedState.modal.postId = postId;
+        watchedState.viewedPosts.add(postId);
+});
       setTimeout(() => pollForNewPosts(watchedState), 5000);
     });
 };

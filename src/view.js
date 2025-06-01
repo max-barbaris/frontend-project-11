@@ -59,7 +59,7 @@ const render = (elements, state, i18nextInstance) => {
     feedsContainer.appendChild(feedFragment);
   };
 
-  const renderPosts = ({ posts }) => {
+  const renderPosts = ({ posts, viewedPosts }) => {
     const { postsContainer } = elements;
 
     const postsFragment = document.createElement('div');
@@ -80,14 +80,24 @@ const render = (elements, state, i18nextInstance) => {
       item.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
 
       const itemLink = document.createElement('a');
-      itemLink.classList.add('fw-bold');
+      const className = viewedPosts.has(post.id) ? ['fw-normal', 'link-secondary'] : ['fw-bold'];
+      itemLink.classList.add(...className);
       itemLink.dataset.id = post.id;
       itemLink.textContent = post.title;
       itemLink.setAttribute('href', post.link);
       itemLink.setAttribute('rel', 'noopener noreferrer');
       itemLink.setAttribute('target', '_blank');
 
+      const button = document.createElement('button');
+      button.setAttribute('type', 'button');
+      button.setAttribute('data-id', post.id);
+      button.setAttribute('data-bs-toggle', 'modal');
+      button.setAttribute('data-bs-target', '#modal');
+      button.classList.add('btn', 'btn-outline-primary', 'btn-sm');
+      button.textContent = 'Просмотр';
+
       item.appendChild(itemLink);
+      item.appendChild(button);
 
       return item;
     });
@@ -98,6 +108,21 @@ const render = (elements, state, i18nextInstance) => {
     postsFragment.appendChild(postsList);
     postsContainer.innerHTML = '';
     postsContainer.appendChild(postsFragment);
+  };
+
+  const renderModal = ({ posts, modal }) => {
+    const { modalWindow } = elements;
+    const post = posts.find((item) => item.id === modal.postId);
+
+    const title = modalWindow.querySelector('.modal-title');
+    title.textContent = post.title;
+    const body = modalWindow.querySelector('.modal-body');
+    body.textContent = post.description;
+    const readButton = modalWindow.querySelector('.modal-footer > a');
+    readButton.textContent = 'Читать полностью';
+    readButton.href = post.link;
+    const closeButton = modalWindow.querySelector('.modal-footer > button');
+    closeButton.textContent = 'Закрыть';
   };
 
   const renderLoadingProcess = ({ loadingProcess }) => {
@@ -144,6 +169,12 @@ const render = (elements, state, i18nextInstance) => {
         break;
       case 'loadingProcess':
         renderLoadingProcess(state);
+        break;
+      case 'modal.postId':
+        renderModal(state);
+        break;
+      case 'viewedPosts':
+        renderPosts(state);
         break;
       default:
         break;
