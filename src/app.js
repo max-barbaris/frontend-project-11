@@ -6,13 +6,6 @@ import render from './view.js';
 import parse from './parser.js';
 import ru from './locales/ru.js';
 
-const updateState = (state, field, data) => {
-  state[field] = {
-    ...state[field],
-    ...data,
-  };
-};
-
 const validateUrl = (url, feeds) => {
   const feedUrls = feeds.map((feed) => feed.url);
   const schema = string().url().required();
@@ -42,16 +35,19 @@ const getLoadingProcessErrorType = (error) => {
 };
 
 const fetchRssFeed = (watchedState, url) => {
-  updateState(watchedState, 'loadingProcess', {
-    status: 'processing', // После клика, статус состояние в процессе
+  const state = watchedState; // Передаем ссылку на объект, поправка для линтера.
+  // После клика, статус состояние в процессе
+  state.loadingProcess = {
+    status: 'processing',
     error: null,
-  });
+  };
 
   return axios
     .get(createProxyUrl(url), { timeout: 10000 }) // Timeout Время до истечения запроса в мс
     .then((response) => {
       const { title, description, items } = parse(response.data.contents); // Распарсенные данные
-      const feed = { // Структура фида
+      // Структура фида
+      const feed = {
         id: uniqueId(), // Присваеваем уникальный ID
         url,
         title,
@@ -60,45 +56,48 @@ const fetchRssFeed = (watchedState, url) => {
       // Постам присвается ID фида и свой ID (Нормализация данных)
       const posts = items.map((item) => ({ ...item, id: uniqueId(), channelId: feed.id }));
 
-      updateState(watchedState, 'loadingProcess', {
-        status: 'success', // Статус завершено
+      // Статус завершено
+      state.loadingProcess = {
+        status: 'success',
         error: null,
-      });
-      watchedState.feeds.unshift(feed);
-      watchedState.posts.unshift(...posts); // Без spread вставится массив
+      };
+      state.feeds.unshift(feed);
+      state.posts.unshift(...posts); // Без spread вставится массив
     })
     .catch((error) => {
-      updateState(watchedState, 'loadingProcess', {
+      state.loadingProcess = {
         status: 'failed',
         error: getLoadingProcessErrorType(error),
-      });
+      };
     });
 };
 
 const pollForNewPosts = (watchedState) => {
-  const promises = watchedState.feeds.map((feed) => axios
+  const state = watchedState;
+  const promises = state.feeds.map((feed) => axios
     .get(createProxyUrl(feed.url), { timeout: 10000 })
     .then((response) => {
       const { items: loadedPosts } = parse(response.data.contents);
-      const previousPosts = watchedState.posts.filter((post) => post.channelId === feed.id);
+      const previousPosts = state.posts.filter((post) => post.channelId === feed.id);
 
       const newPosts = differenceBy(loadedPosts, previousPosts, 'title')
         .map((post) => ({ ...post, channelId: feed.id, id: uniqueId() }));
-      watchedState.posts.unshift(...newPosts);
+      state.posts.unshift(...newPosts);
     })
     .catch((error) => {
-      updateState(watchedState, 'loadingProcess', {
+      state.loadingProcess = {
         status: 'failed',
         error: getLoadingProcessErrorType(error),
-      });
+      };
     }));
   Promise.all(promises).finally(() => {
-    setTimeout(() => pollForNewPosts(watchedState), 5000);
+    setTimeout(() => pollForNewPosts(state), 5000);
   });
 };
 
 export default () => {
-  const initialState = { // Начальное состояние
+  // Начальное состояние
+  const initialState = {
     form: {
       valid: false,
       error: null,
@@ -111,7 +110,8 @@ export default () => {
     posts: [],
   };
 
-  const elements = { // Элементы
+  // Элементы
+  const elements = {
     form: document.querySelector('.rss-form'),
     input: document.querySelector('#url-input'),
     feedback: document.querySelector('.feedback'),
@@ -121,7 +121,8 @@ export default () => {
   };
 
   const defaultLanguage = 'ru';
-  const i18nextInstance = i18next.createInstance(); // Создаёт новый независимый экземпляр
+  // Создаёт новый независимый экземпляр
+  const i18nextInstance = i18next.createInstance();
   i18nextInstance
     .init({
       lng: defaultLanguage,
@@ -148,10 +149,10 @@ export default () => {
         validateUrl(url, watchedState.feeds)
           .then((error) => {
             if (!error) {
-              updateState(watchedState, 'form', { valid: true, error: null });
+              watchedState.form = { valid: true, error: null };
               fetchRssFeed(watchedState, url);
             } else {
-              updateState(watchedState, 'form', { valid: false, error: error.key });
+              watchedState.form = { valid: false, error: error.key };
             }
           });
       });
