@@ -12,6 +12,11 @@ const ru = {
       processing: 'RSS загружается',
       success: 'RSS успешно загружен',
     },
+    feeds: 'Фиды',
+    posts: 'Посты',
+    preview: 'Просмотр',
+    close: 'Закрыть',
+    readFull: 'Читать полностью',
   },
 };
 

@@ -29,7 +29,7 @@ const render = (elements, state, i18nextInstance) => {
 
     const feedTitle = document.createElement('h2');
     feedTitle.classList.add('card-title', 'h4');
-    feedTitle.textContent = 'Фиды';
+    feedTitle.textContent = i18nextInstance.t('feeds');
 
     const feedList = document.createElement('ul');
     feedList.classList.add('list-group', 'border-0', 'rounded-0');
@@ -70,7 +70,7 @@ const render = (elements, state, i18nextInstance) => {
 
     const postsTitle = document.createElement('h2');
     postsTitle.classList.add('card-title', 'h4');
-    postsTitle.textContent = 'Посты';
+    postsTitle.textContent = i18nextInstance.t('posts');
 
     const postsList = document.createElement('ul');
     postsList.classList.add('list-group', 'border-0', 'rounded-0');
@@ -94,7 +94,7 @@ const render = (elements, state, i18nextInstance) => {
       button.setAttribute('data-bs-toggle', 'modal');
       button.setAttribute('data-bs-target', '#modal');
       button.classList.add('btn', 'btn-outline-primary', 'btn-sm');
-      button.textContent = 'Просмотр';
+      button.textContent = i18nextInstance.t('preview');
 
       item.appendChild(itemLink);
       item.appendChild(button);
@@ -119,10 +119,10 @@ const render = (elements, state, i18nextInstance) => {
     const body = modalWindow.querySelector('.modal-body');
     body.textContent = post.description;
     const readButton = modalWindow.querySelector('.modal-footer > a');
-    readButton.textContent = 'Читать полностью';
+    readButton.textContent = i18nextInstance.t('readFull');
     readButton.href = post.link;
     const closeButton = modalWindow.querySelector('.modal-footer > button');
-    closeButton.textContent = 'Закрыть';
+    closeButton.textContent = i18nextInstance.t('close');
   };
 
   const renderLoadingProcess = ({ loadingProcess }) => {
