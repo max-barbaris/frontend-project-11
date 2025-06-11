@@ -6,6 +6,9 @@ import render from './view.js';
 import parse from './parser.js';
 import ru from './locales/ru.js';
 
+const POLLING_INTERVAL_MS = 5000;
+const REQUEST_TIMEOUT_MS = 10000;
+
 const validateUrl = (url, feeds) => {
   const feedUrls = feeds.map(feed => feed.url);
   const schema = string().url().required();
@@ -43,7 +46,7 @@ const fetchRssFeed = (watchedState, url) => {
   };
 
   return axios
-    .get(createProxyUrl(url), { timeout: 10000 }) // Timeout Время до истечения запроса в мс
+    .get(createProxyUrl(url), { timeout: REQUEST_TIMEOUT_MS }) // Timeout Время до истечения запроса в мс
     .then((response) => {
       const { title, description, items } = parse(response.data.contents); // Распарсенные данные
       // Структура фида
@@ -75,7 +78,7 @@ const fetchRssFeed = (watchedState, url) => {
 const pollForNewPosts = (watchedState) => {
   const state = watchedState;
   const promises = state.feeds.map(feed => axios
-    .get(createProxyUrl(feed.url), { timeout: 10000 })
+    .get(createProxyUrl(feed.url), { timeout: REQUEST_TIMEOUT_MS })
     .then((response) => {
       const { items: loadedPosts } = parse(response.data.contents);
       const previousPosts = state.posts.filter(post => post.channelId === feed.id);
@@ -91,7 +94,7 @@ const pollForNewPosts = (watchedState) => {
       };
     }));
   Promise.all(promises).finally(() => {
-    setTimeout(() => pollForNewPosts(state), 5000);
+    setTimeout(() => pollForNewPosts(state), POLLING_INTERVAL_MS);
   });
 };
 
@@ -171,6 +174,6 @@ export default () => {
         watchedState.modal.postId = postId;
         watchedState.viewedPosts.add(postId);
       });
-      setTimeout(() => pollForNewPosts(watchedState), 5000);
+      setTimeout(() => pollForNewPosts(watchedState), POLLING_INTERVAL_MS);
     });
 };
