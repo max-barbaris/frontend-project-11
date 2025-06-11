@@ -11,7 +11,8 @@ const render = (elements, state, i18nextInstance) => {
     if (valid) {
       input.classList.remove('is-invalid');
       feedback.textContent = '';
-    } else {
+    }
+    else {
       input.classList.add('is-invalid');
       feedback.classList.add('text-danger');
       feedback.textContent = i18nextInstance.t(`errors.${error}`);
@@ -112,7 +113,7 @@ const render = (elements, state, i18nextInstance) => {
 
   const renderModal = ({ posts, modal }) => {
     const { modalWindow } = elements;
-    const post = posts.find((item) => item.id === modal.postId);
+    const post = posts.find(item => item.id === modal.postId);
 
     const title = modalWindow.querySelector('.modal-title');
     title.textContent = post.title;

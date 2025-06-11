@@ -7,14 +7,14 @@ import parse from './parser.js';
 import ru from './locales/ru.js';
 
 const validateUrl = (url, feeds) => {
-  const feedUrls = feeds.map((feed) => feed.url);
+  const feedUrls = feeds.map(feed => feed.url);
   const schema = string().url().required();
 
   return schema
     .notOneOf(feedUrls)
     .validate(url)
     .then(() => null)
-    .catch((error) => error.message);
+    .catch(error => error.message);
 };
 
 const createProxyUrl = (originURL) => {
@@ -54,7 +54,7 @@ const fetchRssFeed = (watchedState, url) => {
         description,
       };
       // Постам присвается ID фида и свой ID (Нормализация данных)
-      const posts = items.map((item) => ({ ...item, id: uniqueId(), channelId: feed.id }));
+      const posts = items.map(item => ({ ...item, id: uniqueId(), channelId: feed.id }));
 
       // Статус завершено
       state.loadingProcess = {
@@ -74,14 +74,14 @@ const fetchRssFeed = (watchedState, url) => {
 
 const pollForNewPosts = (watchedState) => {
   const state = watchedState;
-  const promises = state.feeds.map((feed) => axios
+  const promises = state.feeds.map(feed => axios
     .get(createProxyUrl(feed.url), { timeout: 10000 })
     .then((response) => {
       const { items: loadedPosts } = parse(response.data.contents);
-      const previousPosts = state.posts.filter((post) => post.channelId === feed.id);
+      const previousPosts = state.posts.filter(post => post.channelId === feed.id);
 
       const newPosts = differenceBy(loadedPosts, previousPosts, 'title')
-        .map((post) => ({ ...post, channelId: feed.id, id: uniqueId() }));
+        .map(post => ({ ...post, channelId: feed.id, id: uniqueId() }));
       state.posts.unshift(...newPosts);
     })
     .catch((error) => {
@@ -154,7 +154,8 @@ export default () => {
             if (!error) {
               watchedState.form = { valid: true, error: null };
               fetchRssFeed(watchedState, url);
-            } else {
+            }
+            else {
               watchedState.form = { valid: false, error: error.key };
             }
           });
@@ -169,7 +170,7 @@ export default () => {
 
         watchedState.modal.postId = postId;
         watchedState.viewedPosts.add(postId);
-});
+      });
       setTimeout(() => pollForNewPosts(watchedState), 5000);
     });
 };
