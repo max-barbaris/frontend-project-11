@@ -1,26 +1,31 @@
-import js from '@eslint/js';
-import globals from 'globals';
-import { defineConfig } from 'eslint/config';
-import stylistic from '@stylistic/eslint-plugin';
+import globals from 'globals'
+import pluginJs from '@eslint/js'
+import stylistic from '@stylistic/eslint-plugin'
 
-export default defineConfig([
+export default [
+  stylistic.configs.recommended,
+  pluginJs.configs.recommended,
   {
-    files: ['**/*.{js,mjs,cjs}'],
-    plugins: {
-      js,
-      '@stylistic': stylistic
-    },
-    extends: ['js/recommended'],
+    files: [
+      '**/*.{js,ts,tsx}',
+    ],
+  },
+  {
+    ignores: ['dist/'],
+  },
+  {
     languageOptions: {
       globals: {
-        ...globals.node,
         ...globals.browser,
-      }
+        ...globals.node,
+      },
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+      },
     },
     rules: {
-      '@stylistic/semi': ['error', 'always'], // Пример правила
-      '@stylistic/indent': ['error', 2]       // Отступы: 2 пробела
-    }
+      '@typescript-eslint/no-unused-vars': 'off',
+    },
   },
-  { ignores: ['**/node_modules'] }
-]);
+]

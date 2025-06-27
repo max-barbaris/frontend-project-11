@@ -18,6 +18,6 @@ const ru = {
     close: 'Закрыть',
     readFull: 'Читать полностью',
   },
-};
+}
 
-export default ru;
+export default ru
