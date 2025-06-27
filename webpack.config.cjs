@@ -1,3 +1,4 @@
+const path = require('path')
 const process = require('process')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
@@ -26,6 +27,10 @@ module.exports = {
     client: {
       overlay: false,
     },
+  },
+  output: {
+    path: path.resolve('dist'),
+    clean: true,
   },
   plugins: [
     new MiniCssExtractPlugin(),
