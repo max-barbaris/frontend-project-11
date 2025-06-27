@@ -44,6 +44,7 @@ const render = (elements, state, i18nextInstance) => {
       itemTitle.textContent = feed.title;
 
       const itemDescription = document.createElement('p');
+      itemDescription.classList.add('m-0', 'small', 'text-black-50');
       itemDescription.textContent = feed.description;
 
       item.append(itemTitle);
