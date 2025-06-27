@@ -23,7 +23,6 @@ module.exports = {
   },
   devServer: {
     host: 'localhost',
-    port: 8080,
     client: {
       overlay: false,
     },
@@ -34,7 +33,4 @@ module.exports = {
       template: 'index.html',
     }),
   ],
-  output: {
-    path: path.resolve('public'),
-  },
 };
