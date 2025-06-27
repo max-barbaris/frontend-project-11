@@ -21,7 +21,7 @@ Go to the repository and execute the commands:
 ```
 make install
 make build
-make develop
+make start
 ```
 
 ### Demo deploy

@@ -1,8 +1,8 @@
-import path from 'path';
-import HtmlWebpackPlugin from 'html-webpack-plugin';
-import MiniCssExtractPlugin from 'mini-css-extract-plugin';
+const path = require('path');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
-export default {
+module.exports = {
   mode: process.env.NODE_ENV || 'development',
   entry: './src/index.js',
   module: {
@@ -24,7 +24,6 @@ export default {
   devServer: {
     host: 'localhost',
     port: 8080,
-    open: true,
     client: {
       overlay: false,
     },
